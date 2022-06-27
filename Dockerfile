@@ -7,6 +7,6 @@ COPY requirements.txt /code/
 RUN pip install -r requirements.txt
 COPY . /code/
 
-EXPOSE 80
+EXPOSE 8000
 
-CMD ["gunicorn", "--bind", ":80", "--workers", "3", "confessioner.wsgi"]
+CMD ["gunicorn", "--bind", ":8000", "--workers", "3", "confessioner.wsgi"]
