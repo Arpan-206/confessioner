@@ -9,4 +9,4 @@ COPY . /code/
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", ":8000", "--workers", "3", "confessioner.wsgi"]
+CMD ["python", "manage.py", "runserver"]
