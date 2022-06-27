@@ -1,0 +1,24 @@
+{% extends 'main/base.html' %} {% block content %}
+<div class="container">
+    <h1>{{ community.name }} {% if community.verified %} <i class="fa-regular fa-circle-check" style="color: #0066ff;"></i>{% endif %}</h1>
+    <h5 class="card-subtitle">{{members}} Member(s)</h5>
+    <p>{{ community.description }}</p>
+    <div class="container">
+        {% for confession in confessions %}
+        <div class="card" style="width: 80%">
+            <div class="card-body">
+                <h4 class="card-title">{{confession.title}}</h4>
+                <h5 class="card-subtitle">Posted on {{confession.created_at}}</h5>
+                <p class="card-text">
+                   {{confession.content}}
+                </p>
+                <a class="card-link" href="{% url 'confession' id=confession.id %}">Take me there <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </div>
+        <br />
+        {% empty %}
+        <p>No confessions yet!</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,63 @@
+{% extends 'main/base.html' %} {% block content %}
+<div class="container">
+    <h2>Register</h2>
+    {% if message %}
+    <div class="alert alert-warning dismissible">
+        {{message}}
+      </div>
+    {% endif %}
+    <form action="{% url 'register' %}" method="post" >
+        {% csrf_token %}
+    <div class="form-group">
+        <div class="row">
+            <div class="col sm-12">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input class="input-block" type="text" id="username" name="username" required />
+                </div>
+            </div>
+            <div class="col sm-12">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input class="input-block" type="email" id="email" name="email" />
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col sm-6">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input class="input-block" type="password" id="password" name="password" required />
+                </div>
+            </div>
+            <div class="col sm-6">
+                <div class="form-group">
+                    <label for="confirm-pass">Confirm Password</label>
+                    <input
+                        class="input-block"
+                        type="password"
+                        id="confirm-pass"
+                        name="confirm"
+                    />
+                </div>
+            </div>
+            <div class="col sm-12">
+                <div class="form-group">
+                    <label class="paper-switch">
+                      <input id="tos-switch" name="tos-switch" type="checkbox" checked />
+                      <span class="paper-switch-slider"></span>
+                    </label>
+                    <label for="tos-switch" class="paper-switch-label">
+                        By registering an account with us, you agree to our <a href="{% url 'tos' %}">Terms of Use</a> and <a href="{% url 'privacy' %}">Privacy Policy</a>.
+                      </label>
+                    </div>
+            </div>
+            <div class="col sm-12">
+                <button class="btn-secondary-outline" type="submit">Register!</button>
+            </div>
+        </div>
+    </form>
+     
+    </div>
+</div>
+{% endblock %}

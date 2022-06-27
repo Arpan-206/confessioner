@@ -1,0 +1,118 @@
+{% extends 'main/base.html' %} {% block content %}
+<div class="row padding-large">
+    <div class="col-12">
+        <h1>{{ community.name }}</h1>
+        <h3>Join Code: {{ community.join_code }}</h3>
+        <p>{{ community.description }}</p>
+    </div>
+    <div class="col-12">
+        <h2>Join requests</h2>
+        <table class="table-hover">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Requested on</th>
+                    <th>Admit?</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in join_requests %}
+                <tr>
+                    <td>{{req.user.username}}</td>
+                    <td>{{req.timestamp}}</td>
+                    <td><button class="btn-success-outline">Admit</button><button class="btn-danger-outline">Reject</button></td>
+                    </tr>
+                    {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="col-12">
+        <h2>Members</h2>
+        <table class="table-hover">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Joined this community on</th>
+                    <th>Is Moderator</th>
+                    {% if request.user == community.owner %}
+                    <th>Make Mod?</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                <tr>
+                    <td>
+                        {{member.user}} {% if member.user == community.owner%}<i
+                            style="color: #ffe321"
+                            class="fa-solid fa-crown"
+                        ></i>
+                        {% endif %}
+                    </td>
+                    <td>{{member.joined_on}}</td>
+                    <td>{% if member.is_mod %}Yes {% else %} No {% endif %}</td>
+                    {% if request.user == community.owner %}
+                    <td>
+                        {% if not member.is_mod %}<button
+                            class="btn-primary btn-small mod-btn"
+                            value="make-{{member.user}}"
+                            id="make-{{member.user}}"
+                        >
+                            Make Mod
+                        </button>
+                        {% else %}
+                        {% if not member.user == community.owner %}
+                        <button
+                            class="btn-danger btn-small mod-btn"
+                            value="remove-{{member.user}}"
+                            id="remove-{{member.user}}"
+                        >
+                            Remove Mod
+                        </button>
+                        {% else %}
+                        Can't make or remove owner
+                        {% endif %}
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock content %} {% block scripts %} {% for mem in members %} {% if not mem.is_mod %}
+<script>
+    document
+        .querySelector("#make-{{mem.user.username}}")
+        .addEventListener("click", () => {
+            fetch("{% url 'mod_add' community.id %}", {
+                method: "POST",
+                body: JSON.stringify({
+                    username: "{{mem.user.username}}",
+                }),
+            })
+                .then((response) => response.json())
+                .then((result) => {
+                    location.reload();
+                });
+        });
+</script>
+{% else %}
+<script>
+    document
+        .querySelector("#remove-{{mem.user.username}}")
+        .addEventListener("click", () => {
+            fetch("{% url 'mod_remove' community.id %}", {
+                method: "POST",
+                body: JSON.stringify({
+                    username: "{{mem.user.username}}",
+                }),
+            })
+                .then((response) => response.json())
+                .then((result) => {
+                    location.reload();
+                });
+        });
+</script>
+{% endif %} {% endfor %} {% endblock scripts %}

@@ -1,0 +1,40 @@
+{% extends 'main/base.html' %} {% block content %}
+<div style="width: 100%; height: 100%">
+    <div class="container" style="top: 50%">
+        <div class="row">
+            <h1>Join a community!</h1>
+            <div class="col sm-6">
+                <div class="form-group">
+                    <label for="code-input">Join Code</label>
+                    <input class="input-block" type="text" id="code-input" />
+                </div>
+                <button id="join-btn" class="btn-secondary-outline">
+                    Join!
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %} {% block scripts%}
+<script>
+    let joinBtn = document.querySelector("#join-btn");
+    joinBtn.addEventListener("click", () => {
+        let codeIn = document.querySelector("#code-input");
+        fetch("{% url 'join' %}", {
+            method: "POST",
+            body: JSON.stringify({
+                code: codeIn.value,
+            }),
+        })
+            .then((response) => response.json())
+            .then((result) => {
+                console.log(result);
+                if (result.op_code == 1) {
+                    window.location.href = "{% url 'index' %}";
+                } else {
+                    alert(result.message);
+                }
+            });
+    });
+</script>
+{% endblock %}

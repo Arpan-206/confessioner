@@ -1,0 +1,111 @@
+{% extends 'main/base.html' %} {% block content %}
+<div class="container">
+    {% if approved %}
+    <article class="article">
+        {% if title %}
+        <h1 class="article-title"><a href="">{{title}}</a></h1>
+        <p style="display: none">{{id}}</p>
+        <p class="article-meta">Posted on <a href="#">{{created}} (IST)</a></p>
+        <p>{{confession_content}}</p>
+        {% else %}
+
+        <p class="text-lead">{{confession_content}}</p>
+        <p class="article-meta">Posted on <a href="#">{{created}} (IST)</a></p>
+        {% endif %}
+        <div class="row">
+            {% if not is_liked %}
+            <button id="like">
+                <i class="fa-regular fa-heart"></i> {{likes}}
+            </button>
+            {% else %}
+            <button id="like">
+                <i class="fa-solid fa-heart"></i> {{likes}}
+            </button>
+            {% endif %}
+        </div>
+        <div class="row border border-primary">
+            <div class="col col-12">
+                <div class="form-group">
+                    <label for="comment-in">Comment</label>
+                    <textarea
+                        id="comment-in"
+                        placeholder="Your Comment"
+                        style="width: 80%; height: 100px"
+                        required
+                    ></textarea>
+                </div>
+                <fieldset class="form-group">
+                    <label class="paper-switch">
+                        <input
+                            id="anonymous"
+                            name="anonymous"
+                            type="checkbox"
+                        />
+                        <span class="paper-switch-slider round"></span>
+                    </label>
+                    <label for="anonymous" class="paper-switch-label">
+                        Post anonymously? (Admins can still see who you are)
+                    </label>
+                </fieldset>
+                <div class="form-group">
+                    <button id="comment-btn" class="btn-primary">Post <i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="row border border-primary">
+            {% for comment in comments %}
+            <div class="col col-12">
+                <div class="card" style="width: 100%">
+                    <div class="card-body">
+                        <p class="card-text">
+                            {{comment.content}}
+                        </p>
+                        <h5 class="card-subtitle">Posted by {% if not comment.anonymous %}{{ comment.author }}{% else %}Anonymous{% endif %} on {{ comment.created_at }}</h5>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="padding">No comments yet!</p>
+            {% endfor %}
+        </div>
+    </article>
+    {% else %}
+    <div class="container-lg">
+        <h1>Not Approved!</h1>
+        <h5>This confession is yet to be approved, please wait 2-6 days and check up with the moderators if it is still not approved. <br /> Thank You!
+    </div>
+    {% endif %}
+</div>
+{% endblock content %} {% block scripts %}
+<script>
+    let likeBtn = document.querySelector("#like");
+    likeBtn.addEventListener("click", () => {
+        fetch(`{% url 'toggle_like' id=id %}`)
+            .then((response) => response.json())
+            .then((result) => {
+                if (result.op_code == 1) {
+                    likeBtn.innerHTML = `<i class="fa-solid fa-heart"></i> ${result.likes}`;
+                } else if (result.op_code == 2) {
+                    likeBtn.innerHTML = `<i class="fa-regular fa-heart"></i> ${result.likes}`;
+                }
+            });
+    });
+    let commentBtn = document.querySelector("#comment-btn");
+    commentBtn.addEventListener("click", () => {
+        let anonymous = document.querySelector("#anonymous");
+        let commentBox = document.querySelector("#comment-in");
+        fetch("{% url 'comment' id=id %}", {
+            method: "POST",
+            body: JSON.stringify({
+              content: commentBox.value,
+              anonymous: anonymous.checked
+            }),
+          })
+            .then((response) => response.json())
+            .then((result) => {
+                if (result.op_code == 1) 
+                {location.reload()}
+            });
+    });
+</script>
+{% endblock scripts %}
