@@ -1,1 +1,1 @@
-web: gunicorn --bind :8000 --workers 3 confessioner.wsgi   
+web: gunicorn --bind :80 --workers 3 confessioner.wsgi   
