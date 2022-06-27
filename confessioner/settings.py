@@ -94,7 +94,6 @@ else:
             'HOST': os.environ['DB_HOST'],
             'PORT': os.environ['DB_PORT'],
             'OPTIONS': {
-                'sslmode': 'verify-full',
                 'options': os.environ['DB_OPTIONS']
             },
         },
