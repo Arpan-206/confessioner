@@ -31,7 +31,7 @@ DEBUG = False
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ['*']
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO','https')
-CSRF_COOKIE_DOMAIN = ""
+CSRF_COOKIE_DOMAIN = "*"
 
 # Application definition
 
