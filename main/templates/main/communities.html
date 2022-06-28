@@ -1,113 +1,113 @@
 {% extends 'main/base.html' %} {% block content %}
 <div class="container-lg" style="padding: 2%">
-    <h2>Your communities</h2>
-    <div class="col col-12" style="padding: 1%">
-        <a href="{% url 'join' %}" class="paper-btn margin"
-            ><i class="fa-solid fa-hand-pointer"></i> Join a community</a
-        >
-        <label class="paper-btn margin" for="modal-1"
-            ><i class="fa-solid fa-plus"></i> Start a community</label
-        >
-    </div>
-    <input class="modal-state" id="modal-1" type="checkbox" />
-    <div class="modal">
-        <label class="modal-bg" for="modal-1"></label>
-        <div class="modal-body">
-            <label class="btn-close" for="modal-1">X</label>
-            <h4 class="modal-title">Start your own community</h4>
-            <h5 class="modal-subtitle">
-                Start your very own community for people around you to post
-                confessions
-            </h5>
-            <div id="alertBox"></div>
-            <div class="row">
-                <div class="col sm-10">
-                    <div class="form-group">
-                        <label for="comm-name">Name</label>
-                        <input
-                            class="input-block"
-                            name="comm-name"
-                            type="text"
-                            id="comm-name"
-                            placeholder="Name"
-                        />
-                    </div>
-                </div>
-                <div class="col sm-10 form-group">
-                    <label for="comm-desc">Description</label>
-                    <textarea
-                        id="comm-desc"
-                        name="comm-desc"
-                        placeholder="Description of your community"
-                        style="width: 100%; height: 100%"
-                        required
-                    ></textarea>
-                </div>
-                <div class="col sm-10 form-group">
-                    <button id="create-btn" class="btn-primary-outline">
-                        Create!
-                    </button>
-                    <label for="modal-1" class="modal-link">Cancel</label>
-                </div>
-            </div>
+  <h2>Your communities</h2>
+  <div class="col col-12" style="padding: 1%">
+    <a href="{% url 'join' %}" class="paper-btn margin"
+      ><i class="fa-solid fa-hand-pointer"></i> Join a community</a
+    >
+    <label class="paper-btn margin" for="modal-1"
+      ><i class="fa-solid fa-plus"></i> Start a community</label
+    >
+  </div>
+  <input class="modal-state" id="modal-1" type="checkbox" />
+  <div class="modal">
+    <label class="modal-bg" for="modal-1"></label>
+    <div class="modal-body">
+      <label class="btn-close" for="modal-1">X</label>
+      <h4 class="modal-title">Start your own community</h4>
+      <h5 class="modal-subtitle">
+        Start your very own community for people around you to post confessions
+      </h5>
+      <div id="alertBox"></div>
+      <div class="row">
+        <div class="col sm-10">
+          <div class="form-group">
+            <label for="comm-name">Name</label>
+            <input
+              class="input-block"
+              name="comm-name"
+              type="text"
+              id="comm-name"
+              placeholder="Name"
+            />
+          </div>
         </div>
-    </div>
-    <div class="row flex-spaces child-borders"></div>
-
-    {% for mem in member_obj %}
-    <div class="card" style="width: 80%; margin: 2%">
-        <div class="card-body">
-            <h4 class="card-title">
-                {{ mem.community.name }}{% if mem.community.verified %}<i
-                    class="fa-regular fa-circle-check"
-                    style="color: #0066ff"
-                ></i
-                >{% endif %}
-            </h4>
-            <p class="card-text">{{ mem.community.description }}</p>
-            <a
-                class="card-link"
-                href="{% url 'community' id=mem.community.id %}"
-                >Take me there!</a
-            >
-            {% if mem.is_mod %}<code>Mod</code>{% endif %}
+        <div class="col sm-10 form-group">
+          <label for="comm-desc">Description</label>
+          <textarea
+            id="comm-desc"
+            name="comm-desc"
+            placeholder="Description of your community"
+            style="width: 100%; height: 100%"
+            required
+          ></textarea>
         </div>
+        <div class="col sm-10 form-group">
+          <button id="create-btn" class="btn-primary-outline">Create!</button>
+          <label for="modal-1" class="modal-link">Cancel</label>
+        </div>
+      </div>
     </div>
+  </div>
+  <div class="row flex-spaces child-borders"></div>
 
-    {% endfor %}
+  {% for mem in member_obj %}
+  <div class="card" style="width: 80%; margin: 2%">
+    <div class="card-body">
+      <h4 class="card-title">
+        {{ mem.community.name }}{% if mem.community.verified %}<i
+          class="fa-regular fa-circle-check"
+          style="color: #0066ff"
+        ></i
+        >{% endif %}
+      </h4>
+      <p class="card-text">
+        <b>Join Code: {{mem.community.join_code}}</b><br />
+        {{ mem.community.description }}
+      </p>
+      <a class="card-link" href="{% url 'community' id=mem.community.id %}"
+        >Take me there!</a
+      >
+      {% if mem.is_mod %}<a class="card-link" href="{% url 'mod' id=mem.community.id %}"
+      >Mod Area!</a
+    >{% endif %}
+    </div>
+  </div>
+
+  {% endfor %}
 </div>
 {% endblock content %} {% block scripts %}
 <script>
-    let create_btn = document.getElementById("create-btn");
-    create_btn.addEventListener("click", function (e) {
-        let comm_name = document.getElementById("comm-name").value;
-        let comm_desc = document.getElementById("comm-desc").value;
-        let data = {
-            name: comm_name,
-            description: comm_desc,
-        };
-        fetch("{% url 'create_community' %}", {
-            method: "POST",
-            body: JSON.stringify({
-                name: comm_name,
-                description: comm_desc,
-            }),
-        })
-            .then((response) => response.json())
-            .then((result) => {
-                if (result.op_code == 1) {
-                    document.getElementById("alertBox").innerHTML =
-                        "<div class='alert alert-success' role='alert'>" +
-                        result.message +
-                        "</div>";
-                } else {
-                    document.getElementById("alertBox").innerHTML =
-                        "<div class='alert alert-danger' role='alert'>" +
-                        result.message +
-                        "</div>";
-                }
-                console.log(result);
-            });
-    });
+  let create_btn = document.getElementById("create-btn");
+  create_btn.addEventListener("click", function (e) {
+    let comm_name = document.getElementById("comm-name").value;
+    let comm_desc = document.getElementById("comm-desc").value;
+    let data = {
+      name: comm_name,
+      description: comm_desc,
+    };
+    fetch("{% url 'create_community' %}", {
+      method: "POST",
+      body: JSON.stringify({
+        name: comm_name,
+        description: comm_desc,
+      }),
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        if (result.op_code == 1) {
+          document.getElementById("alertBox").innerHTML =
+            "<div class='alert alert-success' role='alert'>" +
+            result.message +
+            "</div>";
+        } else {
+          document.getElementById("alertBox").innerHTML =
+            "<div class='alert alert-danger' role='alert'>" +
+            result.message +
+            "</div>";
+        }
+        console.log(result);
+      });
+  });
 </script>
 {% endblock scripts %}

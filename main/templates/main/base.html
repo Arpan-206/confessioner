@@ -63,5 +63,16 @@
             </div>
         </nav>
         {% block content %}{% endblock %} {% block scripts%}{% endblock %}
+        <div class="border container-lg" style="height: 100px; left: 0; bottom: 0; width: 100%; ">
+            <div class="row">
+                <div class="col-3 col">
+                    <div class="text-center">
+                        <p>
+                            &copy; Confessioner 2022 | <a href="{% url 'tos' %}">Terms</a>
+                            <a href="{% url 'privacy' %}">Privacy</a>
+                        </p>
+                    </div>
+                </div>
+        </div>
     </body>
 </html>

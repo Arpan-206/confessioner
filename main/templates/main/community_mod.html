@@ -6,7 +6,7 @@
         <p>{{ community.description }}</p>
     </div>
     <div class="col-12">
-        <h2>Join requests</h2>
+        <h3>Join requests</h3>
         <table class="table-hover">
             <thead>
                 <tr>
@@ -20,14 +20,36 @@
                 <tr>
                     <td>{{req.user.username}}</td>
                     <td>{{req.timestamp}}</td>
-                    <td><button class="btn-success-outline">Admit</button><button class="btn-danger-outline">Reject</button></td>
+                    <td><button id="admit-{{req.user.username}}" class="btn-success-outline">Admit</button><button id="reject-{{req.user.username}}" class="btn-danger-outline">Reject</button></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3">No join requests</td>
                     </tr>
                     {% endfor %}
             </tbody>
         </table>
     </div>
     <div class="col-12">
-        <h2>Members</h2>
+        <h3>Pending Confessions</h3>
+        <div class="row flex-spaces child-borders child-shadows">
+            {% for uncf in unverified_confessions %}
+            <div class="sm-5 col">
+                <h3>{{ uncf.title }}</h3>
+                <p class="text-muted">{{ uncf.created_at }}</p>
+                <p>{{ uncf.content }}</p>
+                <button class="btn-success btn-small" id="approve-conf-{{uncf.id}}">Approve</button>
+                <button class="btn-danger btn-small" id="deny-conf-{{uncf.id}}">Deny</button>
+            </div>
+            {% empty %}
+            <div class="col">
+                <p>No pending confessions</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-12">
+        <h3>Members</h3>
         <table class="table-hover">
             <thead>
                 <tr>
@@ -115,4 +137,60 @@
                 });
         });
 </script>
-{% endif %} {% endfor %} {% endblock scripts %}
+{% endif %} {% endfor %}{% for req in join_requests %}
+<script>
+    document.querySelector("#admit-{{req.user.username}}").addEventListener("click", () => {
+        fetch("{% url 'approve_join' community.id %}", {
+            method: "POST",
+            body: JSON.stringify({
+                username: '{{req.user.username}}',
+            }),
+        })
+            .then((response) => response.json())
+            .then((result) => {
+                location.reload();
+            });
+    });
+    document.querySelector("#reject-{{req.user.username}}").addEventListener("click", () => {
+        fetch("{% url 'deny_join' community.id %}", {
+            method: "POST",
+            body: JSON.stringify({
+                username: '{{req.user.username}}',
+            }),
+        })
+            .then((response) => response.json())
+            .then((result) => {
+                location.reload();
+            });
+    });
+</script>
+{% endfor %}
+{% for uncf in unverified_confessions %}
+<script>
+    document.querySelector("#approve-conf-{{uncf.id}}").addEventListener("click", () => {
+        fetch("{% url 'approve_conf' %}", {
+            method: "POST",
+            body: JSON.stringify({
+                id: '{{uncf.id}}',
+            }),
+        })
+            .then((response) => response.json())
+            .then((result) => {
+                location.reload();
+            });
+    });
+    document.querySelector("#deny-conf-{{uncf.id}}").addEventListener("click", () => {
+        fetch("{% url 'deny_conf' %}", {
+            method: "POST",
+            body: JSON.stringify({
+                id: '{{uncf.id}}',
+            }),
+        })
+            .then((response) => response.json())
+            .then((result) => {
+                location.reload();
+            });
+    });
+</script>
+{% endfor %}
+{% endblock scripts %}

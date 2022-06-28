@@ -202,6 +202,7 @@ def comment(request, id):
         content=content, author=user, anonymous=content_dict["anonymous"], confession_id=id)
     return JsonResponse({"message": "Comment added!", "op_code": 1})
 
+
 @login_required
 @csrf_exempt
 def create_community(request):
@@ -214,12 +215,15 @@ def create_community(request):
         description = content_dict["description"]
         if name.strip() == '':
             return JsonResponse({"message": "Nothing to do.", "op_code": -2})
-        community_obj = Community.objects.create(name=name, description=description, owner=request.user)
-        member_obj = Member.objects.create(user=request.user, community=community_obj, is_mod=True)
+        community_obj = Community.objects.create(
+            name=name, description=description, owner=request.user)
+        member_obj = Member.objects.create(
+            user=request.user, community=community_obj, is_mod=True)
 
         return JsonResponse({"message": f"Community created with code {community_obj.join_code}", "op_code": 1, "community": community_obj.name, "community_id": community_obj.id, "join_code": community_obj.join_code})
     except:
         return JsonResponse({"message": "Something went wrong.", "op_code": -1})
+
 
 @login_required
 def community_view(request, id):
@@ -262,6 +266,53 @@ def join_comm(request):
         return JsonResponse({'message': 'Request sent successfully.', 'op_code': 1})
 
 @login_required
+@csrf_exempt
+def approve_conf(request):
+    if request.method != "POST":
+        return HttpResponseNotAllowed("Method not allowed")
+    content_dict = json.loads(request.body)
+    conf_id = content_dict["id"]
+    conf_obj = Confession.objects.filter(id=conf_id)
+    if len(conf_obj) != 1:
+        return JsonResponse({"message": "Confession not found", "op_code": -1})
+    conf_obj = conf_obj[0]
+    mem_obj = Member.objects.filter(
+        community=conf_obj.community, user=request.user)
+    if len(mem_obj) != 1:
+        return JsonResponse({"message": "You are not a member of this community.", "op_code": -2})
+    mem_obj = mem_obj[0]
+    if mem_obj.is_mod:
+        if conf_obj.approved:
+            return JsonResponse({"message": "Confession already approved.", "op_code": -1})
+        conf_obj.approved = True
+        conf_obj.save()
+        return JsonResponse({"message": "Confession approved successfully", "op_code": 1})
+    else:
+        return JsonResponse({"message": "You are not a moderator of this community.", "op_code": -3})
+
+@login_required
+@csrf_exempt
+def deny_conf(request):
+    if request.method != "POST":
+        return HttpResponseNotAllowed("Method not allowed")
+    content_dict = json.loads(request.body)
+    conf_id = content_dict["id"]
+    conf_obj = Confession.objects.filter(id=conf_id)
+    if len(conf_obj) != 1:
+        return JsonResponse({"message": "Confession not found", "op_code": -1})
+    conf_obj = conf_obj[0]
+    mem_obj = Member.objects.filter(
+        community=conf_obj.community, user=request.user)
+    if len(mem_obj) != 1:
+        return JsonResponse({"message": "You are not a member of this community.", "op_code": -2})
+    mem_obj = mem_obj[0]
+    if mem_obj.is_mod:
+        conf_obj.delete()
+        return JsonResponse({"message": "Confession denied successfully", "op_code": 1})
+    else:
+        return JsonResponse({"message": "You are not a moderator of this community.", "op_code": -3})
+
+@login_required
 def comm_mod(request, id):
     if request.method != "GET":
         return HttpResponseNotAllowed("Method not allowed")
@@ -270,15 +321,79 @@ def comm_mod(request, id):
     if len(community_obj) != 1:
         return HttpResponseNotFound("Community not found")
     community_obj = community_obj[0]
-    member_usr = Member.objects.filter(user=request.user, community=community_obj)
+    member_usr = Member.objects.filter(
+        user=request.user, community=community_obj)
     if len(member_usr) != 1:
         return HttpResponseNotFound("You are not a member of this community")
     member_usr = member_usr[0]
     if not member_usr.is_mod:
         return HttpResponseNotAllowed("You are not a moderator")
     members = Member.objects.filter(community=community_obj)
-    join_requests = JoinRequest.objects.filter(community=community_obj) 
-    return render(request, "main/community_mod.html", {"community": community_obj, "members": members, "join_requests": join_requests})
+    join_requests = JoinRequest.objects.filter(community=community_obj)
+    unverified_confessions = Confession.objects.filter(community=community_obj, approved=False)
+    verified_confessions = Confession.objects.filter(community=community_obj, approved=True)
+    return render(request, "main/community_mod.html", {"community": community_obj, "members": members, "join_requests": join_requests, "unverified_confessions": unverified_confessions, "verified_confessions": verified_confessions})
+
+
+@login_required
+@csrf_exempt
+def deny_join(request, id):
+    if request.method != "POST":
+        return HttpResponseNotAllowed("Method not allowed")
+    community_obj = Community.objects.filter(id=id)
+    if len(community_obj) != 1:
+        return JsonResponse({"message": "Community not found", "op_code": -1})
+    community_obj = community_obj[0]
+    req_member_usr = Member.objects.filter(
+        user=request.user, community=community_obj)
+    if len(req_member_usr) != 1:
+        return JsonResponse({"message": "You are not a member of this community", "op_code": -2})
+    req_member_usr = req_member_usr[0]
+    if not req_member_usr.is_mod:
+        return JsonResponse({"message": "You are not a moderator", "op_code": -3})
+    join_usr = json.loads(request.body)['username']
+    join_usr_obj = User.objects.filter(username=join_usr)
+    if len(join_usr_obj) != 1:
+        return JsonResponse({"message": "User not found", "op_code": -4})
+    join_req = JoinRequest.objects.filter(
+        community=community_obj, user=join_usr_obj[0])
+    if len(join_req) != 1:
+        return JsonResponse({"message": "No pending request found", "op_code": -5})
+    join_req = join_req[0]
+    join_req.delete()
+    return JsonResponse({"message": "Request removed", "op_code": 1})
+
+
+@login_required
+@csrf_exempt
+def approve_join(request, id):
+    if request.method != "POST":
+        return HttpResponseNotAllowed("Method not allowed")
+    community_obj = Community.objects.filter(id=id)
+    if len(community_obj) != 1:
+        return JsonResponse({"message": "Community not found", "op_code": -1})
+    community_obj = community_obj[0]
+    req_member_usr = Member.objects.filter(
+        user=request.user, community=community_obj)
+    if len(req_member_usr) != 1:
+        return JsonResponse({"message": "You are not a member of this community", "op_code": -2})
+    req_member_usr = req_member_usr[0]
+    if not req_member_usr.is_mod:
+        return JsonResponse({"message": "You are not a moderator", "op_code": -3})
+    join_usr = json.loads(request.body)['username']
+    join_usr_obj = User.objects.filter(username=join_usr)
+    if len(join_usr_obj) != 1:
+        return JsonResponse({"message": "User not found", "op_code": -4})
+    join_req = JoinRequest.objects.filter(
+        community=community_obj, user=join_usr_obj[0])
+    if len(join_req) != 1:
+        return JsonResponse({"message": "No pending request found", "op_code": -5})
+    join_req = join_req[0]
+    join_req.delete()
+    member_obj = Member.objects.create(
+        user=join_usr_obj[0], community=community_obj)
+    return JsonResponse({"message": "Request accepted", "op_code": 1})
+
 
 @login_required
 @csrf_exempt
@@ -288,7 +403,8 @@ def comm_mod_add(request, id):
     community_obj = Community.objects.filter(id=id)[0]
     if request.user != community_obj.owner:
         return HttpResponseForbidden("You are not the owner of this community")
-    member_obj = Member.objects.filter(user=request.user, community=community_obj)
+    member_obj = Member.objects.filter(
+        user=request.user, community=community_obj)
     if len(member_obj) != 1:
         return JsonResponse({"message": "You are not a member of this community", "op_code": -1})
     member_obj = member_obj[0]
@@ -304,13 +420,15 @@ def comm_mod_add(request, id):
     member_obj.save()
     return JsonResponse({"message": "User promoted successfully", "op_code": 1})
 
+
 @login_required
 @csrf_exempt
 def comm_mod_remove(request, id):
     if request.method != "POST":
         return HttpResponseNotAllowed("Method not allowed")
     community_obj = Community.objects.filter(id=id)[0]
-    member_obj = Member.objects.filter(user=request.user, community=community_obj)
+    member_obj = Member.objects.filter(
+        user=request.user, community=community_obj)
     if request.user != community_obj.owner:
         return HttpResponseForbidden("You are not the owner of this community")
     if len(member_obj) != 1:
@@ -327,6 +445,7 @@ def comm_mod_remove(request, id):
     member_obj.is_mod = False
     member_obj.save()
     return JsonResponse({"message": "User removed successfully", "op_code": 1})
+
 
 def tos(request):
     return render(request, "main/tos.html")
