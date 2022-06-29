@@ -1,22 +1,12 @@
 version: "3.9"
 services:
-  db:
-    image: postgres:14
-    volumes:
-      - ./data/db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
   web:
+    restart: always
     build: .
     ports:
       - "80:80"
     volumes:
       - .:/code
     environment:
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    depends_on:
-      - db
+      - DEBUG=False
