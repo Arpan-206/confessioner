@@ -2,6 +2,7 @@
 <div class="container">
     <h1>{{ community.name }} {% if community.verified %} <i class="fa-regular fa-circle-check" style="color: #0066ff;"></i>{% endif %}</h1>
     <p>{{ community.description }}</p>
+    <h5>Join Code: {{ community.join_code }}</h5>
     <div class="row flex-spaces child-borders child-shadows">
         {% for confession in confessions %}
         <div class="sm-6 col">
